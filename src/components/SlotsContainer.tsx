@@ -4,13 +4,15 @@ import DatePicker from "react-datepicker";
 import { fetchSlots, createSlot } from "../modules/slots";
 import ActionCable from "actioncable";
 import Moment from 'moment';
-import { Button } from 'react-bootstrap';
+import { Button, Modal } from 'react-bootstrap';
 
 import "react-datepicker/dist/react-datepicker.css";
 
 const SlotsContainer = () => {
   const [state, setState] = useState({ date: new Date(), duration: 0 });
   const [slots, setSlots] = useState([]);
+  const [modalShow, setModalShow] = useState(false);
+
   const cable = ActionCable.createConsumer("ws://localhost:3000/cable");
   const dispatch = useAppDispatch();
 
@@ -41,6 +43,7 @@ const SlotsContainer = () => {
     createSlot(params)
       .then((data:any) => {
         setSlots(data.slots);
+        setModalShow(true);
       })
   }
 
@@ -51,9 +54,35 @@ const SlotsContainer = () => {
       .then((data) => {
         setSlots(data.slots);
       })
+      .catch((res) => {
+        alert(res.errors);
+      })
   }
 
   const formatDate = (date:string) => { return Moment.utc(date).format('DD-MM-YYYY HH:mm A'); }
+
+  const ConfirmationModal = (props:any) => {
+    return (
+      <Modal
+        {...props}
+        size="md"
+        aria-labelledby="contained-modal-title-vcenter"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title id="contained-modal-title-vcenter">
+          Booking Confirmation
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Your slot is successfully booked.</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={props.onHide}>Close</Button>
+        </Modal.Footer>
+      </Modal>
+    );
+  }
 
   return (
     <div>
@@ -120,6 +149,10 @@ const SlotsContainer = () => {
           </div>
         }
       </div>
+      <ConfirmationModal
+        show={modalShow}
+        onHide={() => setModalShow(false)}
+      />
     </div>
   );
 }
